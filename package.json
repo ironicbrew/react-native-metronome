@@ -10,8 +10,10 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
+    "buffer": "^6.0.3",
     "react": "18.1.0",
     "react-native": "0.70.6",
+    "react-native-ble-manager": "^8.5.0",
     "react-native-metronome-module": "^1.0.0"
   },
   "devDependencies": {
