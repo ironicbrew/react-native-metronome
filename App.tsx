@@ -14,23 +14,31 @@ import {
   FlatList,
   TouchableHighlight,
   EmitterSubscription,
+  Image,
 } from 'react-native';
 
-import {Colors} from 'react-native/Libraries/NewAppScreen';
-
 import BleManager, {Peripheral} from 'react-native-ble-manager';
+import useMonster from './useMonster';
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 const App = () => {
   const [isScanning, setIsScanning] = useState(false);
-  const [enemyHealth, setEnemyHealth] = useState(1000);
+  const [playerHealth, setPlayerHealth] = useState(100);
   const [powerReadings, setPowerReadings] = useState([
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ]);
   const [totalPower, setTotalPower] = useState(0);
   const peripherals = new Map();
   const [list, setList] = useState<any[]>([]);
+  const monster = useMonster({
+    health: 1000,
+    attack: 10,
+    handleMonsterAttack: damage => {
+      setPlayerHealth(playerHealth - damage);
+    },
+    image: require('./img/ghost.jpg'),
+  });
 
   async function startScan() {
     try {
@@ -46,7 +54,7 @@ const App = () => {
   function handleTotalPowerChange() {
     if (totalPower >= 1000) {
       setTotalPower(0);
-      setEnemyHealth(prev => prev - 10);
+      monster.takeDamage(10);
     }
   }
 
@@ -267,10 +275,8 @@ const App = () => {
     <>
       <StatusBar barStyle="dark-content" />
       <SafeAreaView>
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          style={styles.scrollView}>
-          <View style={styles.body}>
+        <ScrollView contentInsetAdjustmentBehavior="automatic">
+          <View>
             <View>
               <Button
                 title={'Scan Bluetooth (' + (isScanning ? 'on' : 'off') + ')'}
@@ -285,13 +291,51 @@ const App = () => {
               />
             </View>
 
-            {list.length == 0 && (
+            {list.length === 0 && (
               <View style={{flex: 1, margin: 20}}>
                 <Text style={{textAlign: 'center'}}>No peripherals</Text>
               </View>
             )}
           </View>
           <View>
+            <Text>Enemy Health: {`${monster.health}`} HP</Text>
+            <View
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                backgroundColor: 'red',
+              }}>
+              <View
+                style={{
+                  width: `${((monster.health / 1000) * 100).toFixed(0)}%`,
+                  height: 10,
+                  backgroundColor: 'green',
+                  overflow: 'visible',
+                }}
+              />
+            </View>
+            <View style={{flex: 1}}>
+              <Image
+                style={{width: '100%', marginTop: 10}}
+                source={monster.image}
+              />
+            </View>
+            <Text>Player Health: {`${playerHealth}`} HP</Text>
+            <View
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                backgroundColor: 'red',
+              }}>
+              <View
+                style={{
+                  width: `${((playerHealth / 100) * 100).toFixed(0)}%`,
+                  height: 10,
+                  backgroundColor: 'green',
+                  overflow: 'visible',
+                }}
+              />
+            </View>
             <Text>Average Power: {`${average(powerReadings)}`}w</Text>
             <Text>Next Attack:</Text>
             <View
@@ -303,22 +347,6 @@ const App = () => {
               <View
                 style={{
                   width: `${((totalPower / 1000) * 100).toFixed(0)}%`,
-                  height: 10,
-                  backgroundColor: 'green',
-                  overflow: 'visible',
-                }}
-              />
-            </View>
-            <Text>Enemy Health: {`${enemyHealth}`} HP</Text>
-            <View
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                backgroundColor: 'red',
-              }}>
-              <View
-                style={{
-                  width: `${((enemyHealth / 1000) * 100).toFixed(0)}%`,
                   height: 10,
                   backgroundColor: 'green',
                   overflow: 'visible',
@@ -342,15 +370,9 @@ const App = () => {
 const styles = StyleSheet.create({
   nextAttackContainer: {},
   nextAttackBar: {},
-  scrollView: {
-    backgroundColor: Colors.lighter,
-  },
   engine: {
     position: 'absolute',
     right: 0,
-  },
-  body: {
-    backgroundColor: Colors.white,
   },
   sectionContainer: {
     marginTop: 32,
@@ -359,19 +381,16 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: '600',
-    color: Colors.black,
   },
   sectionDescription: {
     marginTop: 8,
     fontSize: 18,
     fontWeight: '400',
-    color: Colors.dark,
   },
   highlight: {
     fontWeight: '700',
   },
   footer: {
-    color: Colors.dark,
     fontSize: 12,
     fontWeight: '600',
     padding: 4,

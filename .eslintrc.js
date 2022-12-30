@@ -13,6 +13,7 @@ module.exports = {
         '@typescript-eslint/no-unused-vars': 'off',
         'react-hooks/exhaustive-deps': 'off',
         'react-native/no-inline-styles': 'off',
+        'prettier/prettier': 'warn',
       },
     },
   ],
