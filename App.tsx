@@ -1,10 +1,3 @@
-/**
- * Sample BLE React Native App
- *
- * @format
- * @flow strict-local
- */
-
 import React, {useState, useEffect} from 'react';
 import {
   SafeAreaView,
@@ -20,11 +13,12 @@ import {
   PermissionsAndroid,
   FlatList,
   TouchableHighlight,
+  EmitterSubscription,
 } from 'react-native';
 
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
-import BleManager from 'react-native-ble-manager';
+import BleManager, {Peripheral} from 'react-native-ble-manager';
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
@@ -35,36 +29,32 @@ const App = () => {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ]);
   const [totalPower, setTotalPower] = useState(0);
-  const [serviceData, setServiceData] = useState({});
   const peripherals = new Map();
-  const [list, setList] = useState([]);
+  const [list, setList] = useState<any[]>([]);
 
-  const startScan = () => {
-    if (!isScanning) {
-      BleManager.scan([], 3, true)
-        .then(results => {
-          console.log('Scanning...');
-          setIsScanning(true);
-        })
-        .catch(err => {
-          console.error(err);
-        });
+  async function startScan() {
+    try {
+      await BleManager.scan([], 3, true);
+      setIsScanning(true);
+    } catch (error) {
+      console.error(error);
     }
-  };
+  }
 
-  useEffect(() => {
+  useEffect(handleTotalPowerChange, [totalPower]);
+
+  function handleTotalPowerChange() {
     if (totalPower >= 1000) {
       setTotalPower(0);
       setEnemyHealth(prev => prev - 10);
     }
-  }, [totalPower]);
+  }
 
-  const handleStopScan = () => {
-    console.log('Scan is stopped');
+  function handleStopScan() {
     setIsScanning(false);
-  };
+  }
 
-  const handleDisconnectedPeripheral = data => {
+  function handleDisconnectedPeripheral(data: any) {
     let peripheral = peripherals.get(data.peripheral);
     if (peripheral) {
       peripheral.connected = false;
@@ -72,44 +62,14 @@ const App = () => {
       setList(Array.from(peripherals.values()));
     }
     // console.log('Disconnected from ' + data.peripheral);
-  };
+  }
 
   function nameParser(name: string) {
-    const nameKey = {
+    const nameKey: {[code: string]: string} = {
       '1818': 'Power Service',
       '2A63': 'Power Characteristic',
     };
     return nameKey[name] || name;
-  }
-
-  function bitParser(bitValue: number, index: number) {
-    const bitKey = {
-      0: 'More Data',
-      1: 'Average Speed present',
-      2: 'Instantaneous Cadence',
-      3: 'Average Cadence',
-      4: 'Total Distance Present',
-      5: 'Resistance Level Present',
-      6: 'Instantaneous Power Present',
-      7: 'Average Power Present',
-      8: 'Expended Energy Present',
-      9: 'Heart Rate Present',
-      10: 'Metabolic Equivalent Present',
-      11: 'Elapsed Time Present',
-      12: 'Remaining Time Present',
-    };
-
-    return `${bitKey[index] || index}: ${bitValue}`;
-  }
-
-  function guessBitParser(acc, bitValue, index: number) {
-    const bitKey = {
-      2: 'Instantaneous Power',
-      11: 'Distance',
-      12: 'Number Of Pedal Strokes',
-    };
-
-    return bitKey[index] ? [`${bitKey[index]}: ${bitValue}`] : acc;
   }
 
   const handleUpdateValueForCharacteristic = ({
@@ -117,26 +77,24 @@ const App = () => {
     service,
     peripheral,
     value,
+  }: {
+    characteristic: string;
+    service: string;
+    peripheral: string;
+    value: string;
   }) => {
     service = nameParser(service);
     characteristic = nameParser(characteristic);
     // value = value.map(bitParser);
 
     function updatePowerValues() {
-      setPowerReadings(prev => [...prev, value[2]].slice(1, 11));
-      setTotalPower(prev => prev + value[2]);
+      setPowerReadings(prev => [...prev, Number(value[2])].slice(1, 11));
+      setTotalPower(prev => prev + Number(value[2]));
     }
 
     service === 'Power Service' &&
       characteristic === 'Power Characteristic' &&
       updatePowerValues();
-    //  setServiceData(prev => ({
-    //     ...prev,
-    //     [service]: {
-    //       ...prev[service],
-    //       [characteristic]: value,
-    //     },
-    //   }));
   };
 
   const average = (arr: number[]): number =>
@@ -145,7 +103,7 @@ const App = () => {
   const retrieveConnected = () => {
     BleManager.getConnectedPeripherals([]).then(results => {
       let id = '';
-      if (results.length == 0) {
+      if (results.length === 0) {
         console.log('No connected peripherals');
       }
       for (var i = 0; i < results.length; i++) {
@@ -172,7 +130,7 @@ const App = () => {
     });
   };
 
-  const handleDiscoverPeripheral = peripheral => {
+  const handleDiscoverPeripheral = (peripheral: Peripheral) => {
     // console.log('Got ble peripheral', peripheral);
     if (!peripheral.name) {
       peripheral.name = 'NO NAME';
@@ -181,7 +139,7 @@ const App = () => {
     setList(Array.from(peripherals.values()));
   };
 
-  const testPeripheral = peripheral => {
+  const testPeripheral = (peripheral: Peripheral) => {
     if (peripheral) {
       if (peripheral.connected) {
         BleManager.disconnect(peripheral.id);
@@ -194,7 +152,6 @@ const App = () => {
               peripherals.set(peripheral.id, p);
               setList(Array.from(peripherals.values()));
             }
-            // console.log('Connected to ' + peripheral.id);
 
             setTimeout(function readRSSI() {
               BleManager.retrieveServices(peripheral.id).then(
@@ -225,19 +182,21 @@ const App = () => {
       return;
     }
 
-    bleManagerEmitter.addListener(
-      'BleManagerDiscoverPeripheral',
-      handleDiscoverPeripheral,
-    );
-    bleManagerEmitter.addListener('BleManagerStopScan', handleStopScan);
-    bleManagerEmitter.addListener(
-      'BleManagerDisconnectPeripheral',
-      handleDisconnectedPeripheral,
-    );
-    bleManagerEmitter.addListener(
-      'BleManagerDidUpdateValueForCharacteristic',
-      handleUpdateValueForCharacteristic,
-    );
+    const listeners: EmitterSubscription[] = [
+      bleManagerEmitter.addListener(
+        'BleManagerDiscoverPeripheral',
+        handleDiscoverPeripheral,
+      ),
+      bleManagerEmitter.addListener('BleManagerStopScan', handleStopScan),
+      bleManagerEmitter.addListener(
+        'BleManagerDisconnectPeripheral',
+        handleDisconnectedPeripheral,
+      ),
+      bleManagerEmitter.addListener(
+        'BleManagerDidUpdateValueForCharacteristic',
+        handleUpdateValueForCharacteristic,
+      ),
+    ];
 
     if (Platform.OS === 'android' && Platform.Version >= 23) {
       PermissionsAndroid.check(
@@ -259,32 +218,18 @@ const App = () => {
       });
     }
 
-    return () => {
-      console.log('unmount');
-      if (!bleManagerEmitter.removeListener) {
-        return;
+    return function unsubscribe() {
+      for (const listener of listeners) {
+        listener.remove();
       }
-      bleManagerEmitter.removeListener(
-        'BleManagerDiscoverPeripheral',
-        handleDiscoverPeripheral,
-      );
-      bleManagerEmitter.removeListener('BleManagerStopScan', handleStopScan);
-      bleManagerEmitter.removeListener(
-        'BleManagerDisconnectPeripheral',
-        handleDisconnectedPeripheral,
-      );
-      bleManagerEmitter.removeListener(
-        'BleManagerDidUpdateValueForCharacteristic',
-        handleUpdateValueForCharacteristic,
-      );
     };
   }, []);
 
-  const renderItem = item => {
+  const renderItem = (item: any) => {
     const color = item.connected ? 'grey' : '#fff';
     return (
       <TouchableHighlight onPress={() => testPeripheral(item)}>
-        <View style={[styles.row, {backgroundColor: color}]}>
+        <View style={{backgroundColor: color}}>
           <Text
             style={{
               fontSize: 12,
@@ -325,20 +270,15 @@ const App = () => {
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           style={styles.scrollView}>
-          {global.HermesInternal == null ? null : (
-            <View style={styles.engine}>
-              <Text style={styles.footer}>Engine: Hermes</Text>
-            </View>
-          )}
           <View style={styles.body}>
-            <View style={{margin: 10}}>
+            <View>
               <Button
                 title={'Scan Bluetooth (' + (isScanning ? 'on' : 'off') + ')'}
                 onPress={() => startScan()}
               />
             </View>
 
-            <View style={{margin: 10}}>
+            <View>
               <Button
                 title="Retrieve connected peripherals"
                 onPress={() => retrieveConnected()}
@@ -352,14 +292,13 @@ const App = () => {
             )}
           </View>
           <View>
-            {console.log(powerReadings)}
             <Text>Average Power: {`${average(powerReadings)}`}w</Text>
             <Text>Next Attack:</Text>
             <View
               style={{
                 display: 'flex',
                 flexDirection: 'row',
-                backgroundColor: "red"
+                backgroundColor: 'red',
               }}>
               <View
                 style={{
@@ -367,14 +306,15 @@ const App = () => {
                   height: 10,
                   backgroundColor: 'green',
                   overflow: 'visible',
-                }}></View>
+                }}
+              />
             </View>
             <Text>Enemy Health: {`${enemyHealth}`} HP</Text>
             <View
               style={{
                 display: 'flex',
                 flexDirection: 'row',
-                backgroundColor: "red"
+                backgroundColor: 'red',
               }}>
               <View
                 style={{
@@ -382,30 +322,9 @@ const App = () => {
                   height: 10,
                   backgroundColor: 'green',
                   overflow: 'visible',
-                }}></View>
+                }}
+              />
             </View>
-            {Object.keys(serviceData).map(service => {
-              const characteristicText = Object.keys(serviceData[service]).map(
-                characteristic => {
-                  const text = `${characteristic}: ${serviceData[service][characteristic]}`;
-                  const values = serviceData[service][characteristic].map(
-                    value => <Text>{value}</Text>,
-                  );
-                  return (
-                    <>
-                      <Text key={characteristic}>{characteristic}</Text>
-                      {values}
-                    </>
-                  );
-                },
-              );
-              return (
-                <>
-                  <Text style={{fontWeight: '800'}}>{service}</Text>
-                  {characteristicText}
-                </>
-              );
-            })}
           </View>
         </ScrollView>
         <FlatList
@@ -421,6 +340,8 @@ const App = () => {
 };
 
 const styles = StyleSheet.create({
+  nextAttackContainer: {},
+  nextAttackBar: {},
   scrollView: {
     backgroundColor: Colors.lighter,
   },
