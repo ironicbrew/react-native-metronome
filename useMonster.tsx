@@ -24,7 +24,7 @@ const useMonster = ({
   const [attackSpeed] = useState(initAttackSpeed);
   const [image] = useState(initImage);
 
-  useEffect(setAttackInterval);
+//   useEffect(setAttackInterval);
   useEffect(handleHealthChange, [health]);
 
   function setAttackInterval() {
