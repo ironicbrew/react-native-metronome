@@ -14,6 +14,8 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		7699B88040F8A987B510C191 /* libPods-MobileMetronomeNative-MobileMetronomeNativeTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-MobileMetronomeNative-MobileMetronomeNativeTests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		E804D904295FAFAB00DEC2E3 /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E804D903295FAFAB00DEC2E3 /* Media.xcassets */; };
+		E804D906295FB23300DEC2E3 /* metronome.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = E804D905295FB23300DEC2E3 /* metronome.mp3 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,6 +45,8 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-MobileMetronomeNative.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MobileMetronomeNative.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = MobileMetronomeNative/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-MobileMetronomeNative-MobileMetronomeNativeTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MobileMetronomeNative-MobileMetronomeNativeTests.release.xcconfig"; path = "Target Support Files/Pods-MobileMetronomeNative-MobileMetronomeNativeTests/Pods-MobileMetronomeNative-MobileMetronomeNativeTests.release.xcconfig"; sourceTree = "<group>"; };
+		E804D903295FAFAB00DEC2E3 /* Media.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Media.xcassets; sourceTree = "<group>"; };
+		E804D905295FB23300DEC2E3 /* metronome.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = metronome.mp3; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -86,12 +90,14 @@
 		13B07FAE1A68108700A75B9A /* MobileMetronomeNative */ = {
 			isa = PBXGroup;
 			children = (
+				E804D905295FB23300DEC2E3 /* metronome.mp3 */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB71A68108700A75B9A /* main.m */,
+				E804D903295FAFAB00DEC2E3 /* Media.xcassets */,
 			);
 			name = MobileMetronomeNative;
 			sourceTree = "<group>";
@@ -243,6 +249,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
+				E804D906295FB23300DEC2E3 /* metronome.mp3 in Resources */,
+				E804D904295FAFAB00DEC2E3 /* Media.xcassets in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
