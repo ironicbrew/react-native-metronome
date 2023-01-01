@@ -1,5 +1,5 @@
 import React, {Dispatch, FC, SetStateAction, useEffect, useState} from 'react';
-import { Image, ImageSourcePropType } from 'react-native';
+import {Image, ImageSourcePropType} from 'react-native';
 
 interface Props {
   health: number;
@@ -24,7 +24,7 @@ const useMonster = ({
   const [attackSpeed] = useState(initAttackSpeed);
   const [image] = useState(initImage);
 
-//   useEffect(setAttackInterval);
+  //   useEffect(setAttackInterval);
   useEffect(handleHealthChange, [health]);
 
   function setAttackInterval() {
@@ -38,7 +38,13 @@ const useMonster = ({
     }
   }
 
-  function handleDeath() {}
+  function handleDeath() {
+    nextMonster();
+  }
+
+  function nextMonster() {
+    setHealth(initHealth);
+  }
 
   function takeDamage(damage: number) {
     setHealth(health - damage);
